@@ -1,5 +1,6 @@
-// human1.c（このプログラムの名前）
-#include <stdio.h>     // 標準入出力ヘッダのインクルード
+// human2.c（このプログラムの名前）
+#include <stdio.h> // 標準入出力ヘッダのインクルード
+#include <stdlib.h>
 #include "ppmlib2.h"   // 画面表示部をカットした ppmlib.h
 #include "makefname.c" // 連番ファイル名の作成
 
@@ -16,20 +17,30 @@ int main(void)
     // 背景画像を読み込む
     load_color_image(1, "../data/back.ppm"); // 背景画像をNo.1に読み込み
 
-    // 各フレームを処理
-    for (i = 1; i <= 200; i++)
+    // 背景画像に重ねて表示する合成画像を初期化
+    // 背景画像と同じに設定
+    width[2] = width[1];
+    height[2] = height[1];
+    for (y = 0; y < height[1]; y++)
+    {
+        for (x = 0; x < width[1]; x++)
+        {
+            for (col = 0; col < 3; col++)
+            {
+                image[2][x][y][col] = image[1][x][y][col]; // 背景画像をコピー
+            }
+        }
+    }
+
+    // 20フレームごとに人物領域を重ねる処理
+    for (i = 1; i <= 200; i += 20)
     {
         // 連番のファイル名を生成（org00001.ppm〜org000200.ppm）
         make_filename("../data/org/org", 5, i, fname); // 5:数字の桁数
         // 画像をNo.0に読み込む
         load_color_image(0, fname);
 
-        // 出力画像を初期化（全て白）
-        width[2] = width[0];
-        height[2] = height[0];
-        init_color_image(2, 255, 255, 255);
-
-        // 差分処理
+        // 差分処理（背景画像と入力画像の比較）
         for (y = 0; y < height[0]; y++)
         {
             for (x = 0; x < width[0]; x++)
@@ -54,15 +65,13 @@ int main(void)
                         image[2][x][y][col] = image[0][x][y][col]; // 元画像の値を維持
                     }
                 }
-                // 差分が検出されなかった場合（diff_detected == 0）は何も行わず、背景のままとなる
             }
         }
-        // 出力ファイル名（out00001.ppm〜out000200.ppm）を作る
-        make_filename("../data/results/out", 5, i, fname);
-        // 画像の保存
-        save_color_image(2, fname); // 処理後の画像を保存
     }
 
-    printf("結果画像を out00001.ppm〜out000200.ppm で出力しました\n");
-    return 0; // プログラムの正常終了
+    // 画像の保存
+    save_color_image(2, "../data/human.ppm");
+
+    printf("結果画像を human.ppm で出力しました\n");
+    return 0;  // プログラムの正常終了
 }
